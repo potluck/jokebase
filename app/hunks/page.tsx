@@ -1,5 +1,8 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getLatestHunkVersions } from "@/app/lib/data";
+
+export const metadata: Metadata = { title: "Hunks" };
 
 export default async function HunksPage() {
   const hunks = await getLatestHunkVersions();

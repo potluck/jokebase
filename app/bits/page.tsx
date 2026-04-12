@@ -1,5 +1,8 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getLatestBitVersions } from "@/app/lib/data";
+
+export const metadata: Metadata = { title: "Bits" };
 
 export default async function BitsPage() {
   const bits = await getLatestBitVersions();

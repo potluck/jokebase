@@ -14,8 +14,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "jokebase",
+  title: {
+    default: "jokebase",
+    template: "%s · jokebase",
+  },
   description: "Standup comedy set tracker",
+  openGraph: {
+    siteName: "jokebase",
+    title: "jokebase",
+    description: "Standup comedy set tracker",
+    images: [{ url: "/og.png", width: 800, height: 800 }],
+  },
+  twitter: {
+    card: "summary",
+    title: "jokebase",
+    description: "Standup comedy set tracker",
+    images: ["/og.png"],
+  },
 };
 
 export default function RootLayout({
