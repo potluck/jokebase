@@ -19,6 +19,10 @@ export const metadata: Metadata = {
     template: "%s · jokebase",
   },
   description: "Standup comedy set tracker",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
   openGraph: {
     siteName: "jokebase",
     title: "jokebase",
