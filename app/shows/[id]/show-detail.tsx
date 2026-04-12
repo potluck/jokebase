@@ -49,6 +49,7 @@ export default function ShowDetail({ show }: Props) {
   );
 
   // ── Meta edit state ────────────────────────────────────────────────────────
+  const [highlightHits, setHighlightHits] = useState(true);
   const [editingMeta, setEditingMeta] = useState(false);
   const [metaDate, setMetaDate] = useState(() => utcDateStr(show.date));
   const [metaVenue, setMetaVenue] = useState(show.venue ?? "");
@@ -204,6 +205,20 @@ export default function ShowDetail({ show }: Props) {
         )}
       </div>
 
+      {/* ── Toolbar ── */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setHighlightHits((v) => !v)}
+          className={`text-sm px-3 py-1.5 rounded border transition-colors ${
+            highlightHits
+              ? "bg-yellow-400 border-yellow-400 text-black"
+              : "border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:border-foreground hover:text-foreground"
+          }`}
+        >
+          Highlight hits
+        </button>
+      </div>
+
       {/* ── Set list with ratings ── */}
       <div className="space-y-6">
         {show.hunks.map((sh) => (
@@ -224,7 +239,13 @@ export default function ShowDetail({ show }: Props) {
                   {/* Lines */}
                   <div className="ml-4 space-y-1.5">
                     {sb.lines.map((sl) => (
-                      <div key={sl.id} className={`flex items-start gap-3 text-sm rounded px-2 py-0.5 -mx-2 ${sl.lineVersion.line.type === "SETUP" ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}>
+                      <div key={sl.id} className={`flex items-start gap-3 text-sm rounded px-2 py-0.5 -mx-2 ${
+                          highlightHits && (lineRatings[sl.id] ?? 0) >= 3
+                            ? "bg-yellow-100 dark:bg-yellow-900/30"
+                            : sl.lineVersion.line.type === "SETUP"
+                            ? "bg-blue-50 dark:bg-blue-900/20"
+                            : ""
+                        }`}>
                         <span className="flex-1 text-neutral-700 dark:text-neutral-300 leading-snug">
                           {sl.lineVersion.line.type === "SETUP" && (
                             <span className="inline-block text-[10px] font-medium uppercase tracking-wide bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded px-1.5 py-0.5 mr-2 align-middle">
