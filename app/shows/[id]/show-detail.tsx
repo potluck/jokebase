@@ -209,33 +209,28 @@ export default function ShowDetail({ show }: Props) {
         {show.hunks.map((sh) => (
           <div key={sh.id} className="rounded-lg border border-neutral-200 dark:border-neutral-800">
             {/* Hunk row */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
+            <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
               <span className="font-semibold">{sh.hunkVersion.title}</span>
-              <Rating
-                value={hunkRatings[sh.id]}
-                onChange={(r) => rateHunk(sh.id, r)}
-                size="sm"
-              />
             </div>
 
             {/* Bits */}
             <div className="px-4 py-3 space-y-4">
               {sh.bits.map((sb) => (
                 <div key={sb.id}>
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="mb-2">
                     <span className="font-medium text-sm">{sb.bitVersion.title}</span>
-                    <Rating
-                      value={bitRatings[sb.id]}
-                      onChange={(r) => rateBit(sb.id, r)}
-                      size="sm"
-                    />
                   </div>
 
                   {/* Lines */}
                   <div className="ml-4 space-y-1.5">
                     {sb.lines.map((sl) => (
-                      <div key={sl.id} className="flex items-start gap-3 text-sm">
+                      <div key={sl.id} className={`flex items-start gap-3 text-sm rounded px-2 py-0.5 -mx-2 ${sl.lineVersion.line.type === "SETUP" ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}>
                         <span className="flex-1 text-neutral-700 dark:text-neutral-300 leading-snug">
+                          {sl.lineVersion.line.type === "SETUP" && (
+                            <span className="inline-block text-[10px] font-medium uppercase tracking-wide bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded px-1.5 py-0.5 mr-2 align-middle">
+                              setup
+                            </span>
+                          )}
                           {sl.lineVersion.text}
                         </span>
                         <Rating

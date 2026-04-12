@@ -132,7 +132,7 @@ export async function getShow(showId: string) {
               bitVersion: true,
               lines: {
                 orderBy: { order: "asc" },
-                include: { lineVersion: true },
+                include: { lineVersion: { include: { line: true } } },
               },
             },
           },
