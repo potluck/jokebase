@@ -50,6 +50,7 @@ export default function ShowDetail({ show }: Props) {
 
   // ── Meta edit state ────────────────────────────────────────────────────────
   const [highlightHits, setHighlightHits] = useState(true);
+  const [ratingsLocked, setRatingsLocked] = useState(true);
   const [editingMeta, setEditingMeta] = useState(false);
   const [metaDate, setMetaDate] = useState(() => utcDateStr(show.date));
   const [metaVenue, setMetaVenue] = useState(show.venue ?? "");
@@ -217,6 +218,16 @@ export default function ShowDetail({ show }: Props) {
         >
           Highlight hits
         </button>
+        <button
+          onClick={() => setRatingsLocked((v) => !v)}
+          className={`text-sm px-3 py-1.5 rounded border transition-colors ${
+            ratingsLocked
+              ? "bg-foreground border-foreground text-background"
+              : "border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:border-foreground hover:text-foreground"
+          }`}
+        >
+          {ratingsLocked ? "🔒 Locked" : "🔓 Lock ratings"}
+        </button>
       </div>
 
       {/* ── Set list with ratings ── */}
@@ -258,6 +269,7 @@ export default function ShowDetail({ show }: Props) {
                           value={lineRatings[sl.id]}
                           onChange={(r) => rateLine(sl.id, r)}
                           size="sm"
+                          disabled={ratingsLocked}
                         />
                       </div>
                     ))}
