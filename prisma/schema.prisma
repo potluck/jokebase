@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Core entities (stable IDs) ──────────────────────────────────────────────
+
+model Hunk {
+  id        String        @id @default(cuid())
+  createdAt DateTime      @default(now())
+  versions  HunkVersion[]
+}
+
+model Bit {
+  id              String           @id @default(cuid())
+  createdAt       DateTime         @default(now())
+  versions        BitVersion[]
+  hunkVersionBits HunkVersionBit[]
+}
+
+model Line {
+  id              String           @id @default(cuid())
+  type            LineType         @default(BOTH)
+  createdAt       DateTime         @default(now())
+  versions        LineVersion[]
+  bitVersionLines BitVersionLine[]
+}
+
+enum LineType {
+  SETUP
+  PUNCHLINE
+  BOTH
+}
+
+// ─── Version snapshots ────────────────────────────────────────────────────────
+
+model HunkVersion {
+  id        String           @id @default(cuid())
+  hunkId    String
+  hunk      Hunk             @relation(fields: [hunkId], references: [id])
+  version   Int
+  title     String
+  createdAt DateTime         @default(now())
+  bits      HunkVersionBit[]
+  showHunks ShowHunk[]
+
+  @@unique([hunkId, version])
+}
+
+// Which bit version appears in a hunk version, and in what order
+model HunkVersionBit {
+  id            String      @id @default(cuid())
+  hunkVersionId String
+  hunkVersion   HunkVersion @relation(fields: [hunkVersionId], references: [id])
+  bitId         String
+  bit           Bit         @relation(fields: [bitId], references: [id])
+  bitVersionId  String
+  bitVersion    BitVersion  @relation(fields: [bitVersionId], references: [id])
+  order         Int
+
+  @@unique([hunkVersionId, bitId])
+  @@unique([hunkVersionId, order])
+}
+
+model BitVersion {
+  id              String           @id @default(cuid())
+  bitId           String
+  bit             Bit              @relation(fields: [bitId], references: [id])
+  version         Int
+  title           String
+  createdAt       DateTime         @default(now())
+  lines           BitVersionLine[]
+  showBits        ShowBit[]
+  hunkVersionBits HunkVersionBit[]
+
+  @@unique([bitId, version])
+}
+
+// Which line version appears in a bit version, and in what order
+model BitVersionLine {
+  id            String      @id @default(cuid())
+  bitVersionId  String
+  bitVersion    BitVersion  @relation(fields: [bitVersionId], references: [id])
+  lineId        String
+  line          Line        @relation(fields: [lineId], references: [id])
+  lineVersionId String
+  lineVersion   LineVersion @relation(fields: [lineVersionId], references: [id])
+  order         Int
+
+  @@unique([bitVersionId, lineId])
+  @@unique([bitVersionId, order])
+}
+
+model LineVersion {
+  id              String           @id @default(cuid())
+  lineId          String
+  line            Line             @relation(fields: [lineId], references: [id])
+  version         Int
+  text            String
+  createdAt       DateTime         @default(now())
+  showLines       ShowLine[]
+  bitVersionLines BitVersionLine[]
+
+  @@unique([lineId, version])
+}
+
+// ─── Shows ────────────────────────────────────────────────────────────────────
+
+model Show {
+  id        String     @id @default(cuid())
+  date      DateTime
+  venue     String?
+  type      ShowType   @default(OPEN_MIC)
+  notes     String?
+  createdAt DateTime   @default(now())
+  hunks     ShowHunk[]
+}
+
+enum ShowType {
+  SHOW
+  OPEN_MIC
+}
+
+// A hunk version as performed at a show
+model ShowHunk {
+  id            String      @id @default(cuid())
+  showId        String
+  show          Show        @relation(fields: [showId], references: [id])
+  hunkVersionId String
+  hunkVersion   HunkVersion @relation(fields: [hunkVersionId], references: [id])
+  order         Int
+  rating        Int?        // 1–5, nullable
+  bits          ShowBit[]
+}
+
+// A bit version as performed within a show hunk
+model ShowBit {
+  id           String     @id @default(cuid())
+  showHunkId   String
+  showHunk     ShowHunk   @relation(fields: [showHunkId], references: [id])
+  bitVersionId String
+  bitVersion   BitVersion @relation(fields: [bitVersionId], references: [id])
+  order        Int
+  rating       Int?       // 1–5, nullable
+  lines        ShowLine[]
+}
+
+// A line version as performed within a show bit
+model ShowLine {
+  id            String      @id @default(cuid())
+  showBitId     String
+  showBit       ShowBit     @relation(fields: [showBitId], references: [id])
+  lineVersionId String
+  lineVersion   LineVersion @relation(fields: [lineVersionId], references: [id])
+  order         Int
+  rating        Int?        // 1–5, nullable
+}

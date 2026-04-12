@@ -1,65 +1,76 @@
-import Image from "next/image";
+import Link from "next/link";
+import { db } from "./lib/db";
+import { getShows } from "./lib/data";
 
-export default function Home() {
+export default async function DashboardPage() {
+  const [hunkCount, bitCount, shows] = await Promise.all([
+    db.hunk.count(),
+    db.bit.count(),
+    getShows(),
+  ]);
+
+  const recentShows = shows.slice(0, 5);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="space-y-8">
+      <h1 className="text-2xl font-bold">Dashboard</h1>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { label: "Hunks", value: hunkCount, href: "/hunks" },
+          { label: "Bits", value: bitCount, href: "/bits" },
+          { label: "Shows", value: shows.length, href: "/shows" },
+        ].map(({ label, value, href }) => (
+          <Link
+            key={label}
+            href={href}
+            className="p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors text-center"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <div className="text-3xl font-bold">{value}</div>
+            <div className="text-sm text-neutral-500 mt-1">{label}</div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Recent shows */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold">Recent shows</h2>
+          <Link href="/shows/new" className="text-sm text-neutral-500 hover:text-foreground">
+            + Log show
+          </Link>
         </div>
-      </main>
+        {recentShows.length === 0 ? (
+          <p className="text-neutral-500 text-sm">No shows logged yet.</p>
+        ) : (
+          <ul className="space-y-2">
+            {recentShows.map((show) => (
+              <li key={show.id}>
+                <Link
+                  href={`/shows/${show.id}`}
+                  className="flex items-center justify-between p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors text-sm"
+                >
+                  <span>
+                    {new Date(show.date).toLocaleDateString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      timeZone: "UTC",
+                    })}
+                    {show.venue && (
+                      <span className="text-neutral-500 ml-2">@ {show.venue}</span>
+                    )}
+                  </span>
+                  <span className="text-neutral-500">
+                    {show.hunks.length} hunk{show.hunks.length !== 1 ? "s" : ""}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
