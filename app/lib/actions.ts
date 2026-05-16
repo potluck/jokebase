@@ -235,6 +235,7 @@ export async function createShow(input: CreateShowInput) {
     }
   }
 
+  revalidatePath("/shows");
   redirect(`/shows/${show.id}`);
 }
 
@@ -263,4 +264,6 @@ export async function updateShowMeta(
       notes: data.notes || null,
     },
   });
+  revalidatePath("/shows");
+  revalidatePath(`/shows/${showId}`);
 }
