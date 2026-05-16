@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { db } from "./db";
 import { LineType } from "@/app/generated/prisma/client";
 type ShowType = "SHOW" | "OPEN_MIC";
@@ -12,6 +13,7 @@ export async function createHunk(title: string) {
   await db.hunkVersion.create({
     data: { hunkId: hunk.id, version: 1, title },
   });
+  revalidatePath("/hunks");
   redirect("/hunks");
 }
 
@@ -41,6 +43,8 @@ export async function updateHunk(
       },
     },
   });
+  revalidatePath("/hunks");
+  revalidatePath(`/hunks/${hunkId}`);
   redirect(`/hunks/${hunkId}`);
 }
 
@@ -80,6 +84,7 @@ export async function createBit(title: string, rawText: string) {
     },
   });
 
+  revalidatePath("/bits");
   redirect(`/bits/${bit.id}`);
 }
 
@@ -148,6 +153,8 @@ export async function updateBit(
     },
   });
 
+  revalidatePath("/bits");
+  revalidatePath(`/bits/${bitId}`);
   redirect(`/bits/${bitId}`);
 }
 
