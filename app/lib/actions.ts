@@ -239,6 +239,15 @@ export async function createShow(input: CreateShowInput) {
   redirect(`/shows/${show.id}`);
 }
 
+export async function reorderShowHunks(showId: string, orderedShowHunkIds: string[]) {
+  await Promise.all(
+    orderedShowHunkIds.map((id, i) =>
+      db.showHunk.update({ where: { id }, data: { order: i } })
+    )
+  );
+  revalidatePath(`/shows/${showId}`);
+}
+
 export async function updateShowHunkRating(showHunkId: string, rating: number | null) {
   await db.showHunk.update({ where: { id: showHunkId }, data: { rating } });
 }

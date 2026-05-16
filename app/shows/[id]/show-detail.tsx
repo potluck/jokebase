@@ -7,6 +7,7 @@ import {
   updateShowBitRating,
   updateShowLineRating,
   updateShowMeta,
+  reorderShowHunks,
 } from "@/app/lib/actions";
 import type { getShow } from "@/app/lib/data";
 
@@ -29,6 +30,18 @@ interface Props {
 }
 
 export default function ShowDetail({ show }: Props) {
+  // ── Set list order ────────────────────────────────────────────────────────
+  const [orderedHunks, setOrderedHunks] = useState(show.hunks);
+
+  function moveShowHunk(index: number, dir: -1 | 1) {
+    const next = [...orderedHunks];
+    [next[index], next[index + dir]] = [next[index + dir], next[index]];
+    setOrderedHunks(next);
+    reorderShowHunks(show.id, next.map((h) => h.id)).catch(() =>
+      setOrderedHunks(orderedHunks)
+    );
+  }
+
   // ── Rating state: keyed by entity id ──────────────────────────────────────
   const [hunkRatings, setHunkRatings] = useState<Record<string, number | null>>(
     () => Object.fromEntries(show.hunks.map((sh) => [sh.id, sh.rating]))
@@ -232,11 +245,29 @@ export default function ShowDetail({ show }: Props) {
 
       {/* ── Set list with ratings ── */}
       <div className="space-y-6">
-        {show.hunks.map((sh) => (
+        {orderedHunks.map((sh, index) => (
           <div key={sh.id} className="rounded-lg border border-neutral-200 dark:border-neutral-800">
             {/* Hunk row */}
-            <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
-              <span className="font-semibold">{sh.hunkVersion.title}</span>
+            <div className="flex items-center px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
+              <span className="font-semibold flex-1">{sh.hunkVersion.title}</span>
+              <div className="flex gap-0.5">
+                <button
+                  onClick={() => moveShowHunk(index, -1)}
+                  disabled={index === 0}
+                  className="text-neutral-400 hover:text-foreground disabled:opacity-20 px-1"
+                  aria-label="Move up"
+                >
+                  ↑
+                </button>
+                <button
+                  onClick={() => moveShowHunk(index, 1)}
+                  disabled={index === orderedHunks.length - 1}
+                  className="text-neutral-400 hover:text-foreground disabled:opacity-20 px-1"
+                  aria-label="Move down"
+                >
+                  ↓
+                </button>
+              </div>
             </div>
 
             {/* Bits */}

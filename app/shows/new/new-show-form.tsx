@@ -58,6 +58,7 @@ export default function NewShowForm({ hunks }: Props) {
   const [venue, setVenue] = useState("");
   const [type, setType] = useState<ShowType>("OPEN_MIC");
   const [notes, setNotes] = useState("");
+  const [orderedHunks, setOrderedHunks] = useState(hunks);
   const [hunkState, setHunkState] = useState<Record<string, HunkState>>(
     () => Object.fromEntries(hunks.map((hv) => [hv.id, initHunkState(hv)]))
   );
@@ -65,6 +66,14 @@ export default function NewShowForm({ hunks }: Props) {
   const router = useRouter();
 
   // ── helpers ───────────────────────────────────────────────────────────────
+
+  function moveHunk(index: number, dir: -1 | 1) {
+    setOrderedHunks((prev) => {
+      const next = [...prev];
+      [next[index], next[index + dir]] = [next[index + dir], next[index]];
+      return next;
+    });
+  }
 
   function toggleHunk(hvId: string) {
     setHunkState((prev) => ({
@@ -130,7 +139,7 @@ export default function NewShowForm({ hunks }: Props) {
     e.preventDefault();
 
     const selectedHunks: ShowHunkInput[] = [];
-    for (const hv of hunks) {
+    for (const hv of orderedHunks) {
       const hs = hunkState[hv.id];
       if (!hs.selected) continue;
 
@@ -163,7 +172,7 @@ export default function NewShowForm({ hunks }: Props) {
     });
   }
 
-  const selectedCount = hunks.filter((hv) => hunkState[hv.id].selected).length;
+  const selectedCount = orderedHunks.filter((hv) => hunkState[hv.id].selected).length;
 
   return (
     <div>
@@ -229,7 +238,7 @@ export default function NewShowForm({ hunks }: Props) {
             <p className="text-neutral-500 text-sm">No hunks yet — create some first.</p>
           ) : (
             <div className="space-y-4">
-              {hunks.map((hv) => {
+              {orderedHunks.map((hv, index) => {
                 const hs = hunkState[hv.id];
                 return (
                   <div
@@ -262,6 +271,29 @@ export default function NewShowForm({ hunks }: Props) {
                           />
                         </span>
                       )}
+                      <span
+                        className="flex gap-0.5 ml-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => moveHunk(index, -1)}
+                          disabled={index === 0}
+                          className="text-neutral-400 hover:text-foreground disabled:opacity-20 px-1"
+                          aria-label="Move up"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveHunk(index, 1)}
+                          disabled={index === orderedHunks.length - 1}
+                          className="text-neutral-400 hover:text-foreground disabled:opacity-20 px-1"
+                          aria-label="Move down"
+                        >
+                          ↓
+                        </button>
+                      </span>
                     </div>
 
                     {/* Bits */}
