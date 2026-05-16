@@ -13,7 +13,9 @@ export async function createHunk(title: string) {
   await db.hunkVersion.create({
     data: { hunkId: hunk.id, version: 1, title },
   });
+  revalidatePath("/");
   revalidatePath("/hunks");
+  revalidatePath("/shows/new");
   redirect("/hunks");
 }
 
@@ -45,6 +47,7 @@ export async function updateHunk(
   });
   revalidatePath("/hunks");
   revalidatePath(`/hunks/${hunkId}`);
+  revalidatePath("/shows/new");
   redirect(`/hunks/${hunkId}`);
 }
 
@@ -84,7 +87,9 @@ export async function createBit(title: string, rawText: string) {
     },
   });
 
+  revalidatePath("/");
   revalidatePath("/bits");
+  revalidatePath("/hunks/[id]", "page");
   redirect(`/bits/${bit.id}`);
 }
 
@@ -155,6 +160,7 @@ export async function updateBit(
 
   revalidatePath("/bits");
   revalidatePath(`/bits/${bitId}`);
+  revalidatePath("/hunks/[id]", "page");
   redirect(`/bits/${bitId}`);
 }
 
@@ -235,6 +241,7 @@ export async function createShow(input: CreateShowInput) {
     }
   }
 
+  revalidatePath("/");
   revalidatePath("/shows");
   redirect(`/shows/${show.id}`);
 }
@@ -273,6 +280,7 @@ export async function updateShowMeta(
       notes: data.notes || null,
     },
   });
+  revalidatePath("/");
   revalidatePath("/shows");
   revalidatePath(`/shows/${showId}`);
 }
