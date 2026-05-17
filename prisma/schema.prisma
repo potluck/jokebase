@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../app/generated/prisma"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["jb"]
 }
 
 // ─── Core entities (stable IDs) ──────────────────────────────────────────────
@@ -13,6 +15,9 @@ model Hunk {
   id        String        @id @default(cuid())
   createdAt DateTime      @default(now())
   versions  HunkVersion[]
+
+  @@map("hunk")
+  @@schema("jb")
 }
 
 model Bit {
@@ -20,6 +25,9 @@ model Bit {
   createdAt       DateTime         @default(now())
   versions        BitVersion[]
   hunkVersionBits HunkVersionBit[]
+
+  @@map("bit")
+  @@schema("jb")
 }
 
 model Line {
@@ -28,12 +36,17 @@ model Line {
   createdAt       DateTime         @default(now())
   versions        LineVersion[]
   bitVersionLines BitVersionLine[]
+
+  @@map("line")
+  @@schema("jb")
 }
 
 enum LineType {
   SETUP
   PUNCHLINE
   BOTH
+
+  @@schema("jb")
 }
 
 // ─── Version snapshots ────────────────────────────────────────────────────────
@@ -49,6 +62,8 @@ model HunkVersion {
   showHunks ShowHunk[]
 
   @@unique([hunkId, version])
+  @@map("hunk_version")
+  @@schema("jb")
 }
 
 // Which bit version appears in a hunk version, and in what order
@@ -64,6 +79,8 @@ model HunkVersionBit {
 
   @@unique([hunkVersionId, bitId])
   @@unique([hunkVersionId, order])
+  @@map("hunk_version_bit")
+  @@schema("jb")
 }
 
 model BitVersion {
@@ -78,6 +95,8 @@ model BitVersion {
   hunkVersionBits HunkVersionBit[]
 
   @@unique([bitId, version])
+  @@map("bit_version")
+  @@schema("jb")
 }
 
 // Which line version appears in a bit version, and in what order
@@ -93,6 +112,8 @@ model BitVersionLine {
 
   @@unique([bitVersionId, lineId])
   @@unique([bitVersionId, order])
+  @@map("bit_version_line")
+  @@schema("jb")
 }
 
 model LineVersion {
@@ -106,6 +127,8 @@ model LineVersion {
   bitVersionLines BitVersionLine[]
 
   @@unique([lineId, version])
+  @@map("line_version")
+  @@schema("jb")
 }
 
 // ─── Shows ────────────────────────────────────────────────────────────────────
@@ -118,11 +141,16 @@ model Show {
   notes     String?
   createdAt DateTime   @default(now())
   hunks     ShowHunk[]
+
+  @@map("show")
+  @@schema("jb")
 }
 
 enum ShowType {
   SHOW
   OPEN_MIC
+
+  @@schema("jb")
 }
 
 // A hunk version as performed at a show
@@ -135,6 +163,9 @@ model ShowHunk {
   order         Int
   rating        Int?        // 1–5, nullable
   bits          ShowBit[]
+
+  @@map("show_hunk")
+  @@schema("jb")
 }
 
 // A bit version as performed within a show hunk
@@ -147,6 +178,9 @@ model ShowBit {
   order        Int
   rating       Int?       // 1–5, nullable
   lines        ShowLine[]
+
+  @@map("show_bit")
+  @@schema("jb")
 }
 
 // A line version as performed within a show bit
@@ -158,4 +192,7 @@ model ShowLine {
   lineVersion   LineVersion @relation(fields: [lineVersionId], references: [id])
   order         Int
   rating        Int?        // 1–5, nullable
+
+  @@map("show_line")
+  @@schema("jb")
 }
