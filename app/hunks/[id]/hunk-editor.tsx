@@ -24,11 +24,14 @@ interface BitSlot {
 export default function HunkEditor({ hunkId, latestVersion, allVersions, allBits }: Props) {
   const [title, setTitle] = useState(latestVersion.title);
   const [bits, setBits] = useState<BitSlot[]>(
-    latestVersion.bits.map((hvb) => ({
-      bitId: hvb.bitId,
-      bitVersionId: hvb.bitVersionId,
-      title: hvb.bitVersion.title,
-    }))
+    latestVersion.bits.map((hvb) => {
+      const latest = allBits.find((bv) => bv.bitId === hvb.bitId);
+      return {
+        bitId: hvb.bitId,
+        bitVersionId: latest?.id ?? hvb.bitVersionId,
+        title: latest?.title ?? hvb.bitVersion.title,
+      };
+    })
   );
   const [showHistory, setShowHistory] = useState(false);
   const [pending, startTransition] = useTransition();
