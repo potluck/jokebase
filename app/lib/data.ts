@@ -34,6 +34,54 @@ export async function getLatestHunkVersions() {
   });
 }
 
+export async function getLatestHunkVersionsForShowForm() {
+  const [hunks, performances] = await Promise.all([
+    getLatestHunkVersions(),
+    db.showHunk.findMany({
+      select: {
+        order: true,
+        showId: true,
+        hunkVersion: { select: { hunkId: true } },
+        show: { select: { date: true, createdAt: true } },
+      },
+    }),
+  ]);
+
+  const latestPerformanceByHunk = new Map<string, (typeof performances)[number]>();
+  for (const performance of performances) {
+    const hunkId = performance.hunkVersion.hunkId;
+    const current = latestPerformanceByHunk.get(hunkId);
+    if (!current || compareHunkPerformances(performance, current) < 0) {
+      latestPerformanceByHunk.set(hunkId, performance);
+    }
+  }
+
+  return hunks.sort((a, b) => {
+    const aPerformance = latestPerformanceByHunk.get(a.hunkId);
+    const bPerformance = latestPerformanceByHunk.get(b.hunkId);
+
+    if (aPerformance && bPerformance) {
+      return compareHunkPerformances(aPerformance, bPerformance);
+    }
+    if (aPerformance) return -1;
+    if (bPerformance) return 1;
+    return b.createdAt.getTime() - a.createdAt.getTime();
+  });
+}
+
+function compareHunkPerformances(
+  a: { order: number; showId: string; show: { date: Date; createdAt: Date } },
+  b: { order: number; showId: string; show: { date: Date; createdAt: Date } }
+) {
+  const dateDifference = b.show.date.getTime() - a.show.date.getTime();
+  if (dateDifference !== 0) return dateDifference;
+
+  const showDifference = b.show.createdAt.getTime() - a.show.createdAt.getTime();
+  if (showDifference !== 0) return showDifference;
+
+  return a.order - b.order;
+}
+
 // Returns the latest BitVersion for every bit, including its ordered lines
 export async function getLatestBitVersions() {
   const versions = await db.bitVersion.findMany({
