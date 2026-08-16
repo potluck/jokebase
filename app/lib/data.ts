@@ -34,7 +34,7 @@ export async function getLatestHunkVersions() {
   });
 }
 
-export async function getLatestHunkVersionsForShowForm() {
+export async function getLatestHunkVersionsForSetForm() {
   const [hunks, performances] = await Promise.all([
     getLatestHunkVersions(),
     db.showHunk.findMany({
@@ -105,7 +105,7 @@ export async function getLatestBitVersions() {
   });
 }
 
-export async function getLatestBitVersionsWithShowCounts() {
+export async function getLatestBitVersionsWithSetCounts() {
   const [bits, performances] = await Promise.all([
     getLatestBitVersions(),
     db.showBit.findMany({
@@ -129,23 +129,23 @@ export async function getLatestBitVersionsWithShowCounts() {
     }),
   ]);
 
-  const showIdsByBit = new Map<string, Set<string>>();
-  const scoresByBitAndShow = new Map<string, Map<string, number[]>>();
+  const setIdsByBit = new Map<string, Set<string>>();
+  const scoresByBitAndSet = new Map<string, Map<string, number[]>>();
   const latestPerformanceByBit = new Map<string, (typeof performances)[number]>();
 
   for (const performance of performances) {
     const bitId = performance.bitVersion.bitId;
-    const showIds = showIdsByBit.get(bitId) ?? new Set<string>();
-    showIds.add(performance.showHunk.showId);
-    showIdsByBit.set(bitId, showIds);
+    const setIds = setIdsByBit.get(bitId) ?? new Set<string>();
+    setIds.add(performance.showHunk.showId);
+    setIdsByBit.set(bitId, setIds);
 
     const score = calculateBitScore(performance.lines);
     if (score !== null) {
-      const scoresByShow = scoresByBitAndShow.get(bitId) ?? new Map<string, number[]>();
-      const showScores = scoresByShow.get(performance.showHunk.showId) ?? [];
-      showScores.push(score);
-      scoresByShow.set(performance.showHunk.showId, showScores);
-      scoresByBitAndShow.set(bitId, scoresByShow);
+      const scoresBySet = scoresByBitAndSet.get(bitId) ?? new Map<string, number[]>();
+      const setScores = scoresBySet.get(performance.showHunk.showId) ?? [];
+      setScores.push(score);
+      scoresBySet.set(performance.showHunk.showId, setScores);
+      scoresByBitAndSet.set(bitId, scoresBySet);
     }
 
     const current = latestPerformanceByBit.get(bitId);
@@ -156,15 +156,15 @@ export async function getLatestBitVersionsWithShowCounts() {
 
   return bits
     .map((bit) => {
-      const scoresByShow = scoresByBitAndShow.get(bit.bitId);
-      const showScores = scoresByShow
-        ? [...scoresByShow.values()].map((scores) => averageScores(scores) as number)
+      const scoresBySet = scoresByBitAndSet.get(bit.bitId);
+      const setScores = scoresBySet
+        ? [...scoresBySet.values()].map((scores) => averageScores(scores) as number)
         : [];
 
       return {
         ...bit,
-        showCount: showIdsByBit.get(bit.bitId)?.size ?? 0,
-        averageScore: averageScores(showScores),
+        setCount: setIdsByBit.get(bit.bitId)?.size ?? 0,
+        averageScore: averageScores(setScores),
       };
     })
     .sort((a, b) => {
@@ -265,8 +265,8 @@ export async function getAllBitVersions(bitId: string) {
   });
 }
 
-// Returns every performance of a stable bit, regardless of which version was used.
-export async function getBitShowHistory(bitId: string) {
+// Returns every set performance of a stable bit, regardless of which version was used.
+export async function getBitSetHistory(bitId: string) {
   return db.showBit.findMany({
     where: { bitVersion: { bitId } },
     orderBy: { showHunk: { show: { date: "desc" } } },
@@ -288,9 +288,9 @@ export async function getBitShowHistory(bitId: string) {
   });
 }
 
-export async function getShow(showId: string) {
+export async function getSet(setId: string) {
   return db.show.findUnique({
-    where: { id: showId },
+    where: { id: setId },
     include: {
       hunks: {
         orderBy: { order: "asc" },
@@ -312,7 +312,7 @@ export async function getShow(showId: string) {
   });
 }
 
-export async function getShows() {
+export async function getSets() {
   return db.show.findMany({
     orderBy: { date: "desc" },
     include: {

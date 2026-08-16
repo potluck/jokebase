@@ -1,12 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import BitScore from "@/app/components/bit-score";
-import { getLatestBitVersionsWithShowCounts } from "@/app/lib/data";
+import { getLatestBitVersionsWithSetCounts } from "@/app/lib/data";
 
 export const metadata: Metadata = { title: "Bits" };
 
 export default async function BitsPage() {
-  const bits = await getLatestBitVersionsWithShowCounts();
+  const bits = await getLatestBitVersionsWithSetCounts();
 
   return (
     <div>
@@ -34,7 +34,7 @@ export default async function BitsPage() {
                   <span className="font-medium">{bv.title}</span>
                   <BitScore score={bv.averageScore} />
                   <span className="text-xs text-neutral-500">
-                    {bv.showCount} show{bv.showCount === 1 ? "" : "s"}
+                    {bv.setCount} set{bv.setCount === 1 ? "" : "s"}
                   </span>
                 </span>
                 <span className="text-sm text-neutral-500">

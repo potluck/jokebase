@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import BitEditor from "./bit-editor";
-import BitShowHistory from "./bit-show-history";
+import BitSetHistory from "./bit-set-history";
 import {
   getAllBitVersions,
-  getBitShowHistory,
+  getBitSetHistory,
   getLatestBitVersion,
 } from "@/app/lib/data";
 
@@ -25,10 +25,10 @@ export default async function BitPage({
 }) {
   const { id } = await params;
 
-  const [latestVersion, allVersions, showHistory] = await Promise.all([
+  const [latestVersion, allVersions, setHistory] = await Promise.all([
     getLatestBitVersion(id),
     getAllBitVersions(id),
-    getBitShowHistory(id),
+    getBitSetHistory(id),
   ]);
 
   if (!latestVersion) notFound();
@@ -40,7 +40,7 @@ export default async function BitPage({
         latestVersion={latestVersion}
         allVersions={allVersions}
       />
-      <BitShowHistory history={showHistory} />
+      <BitSetHistory history={setHistory} />
     </>
   );
 }

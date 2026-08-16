@@ -5,14 +5,14 @@ import BitScore from "@/app/components/bit-score";
 import Rating from "@/app/components/rating";
 import { calculateBitScore } from "@/app/lib/bit-score";
 import {
-  updateShowLineRating,
-  updateShowMeta,
-  reorderShowHunks,
+  updateSetLineRating,
+  updateSetMeta,
+  reorderSetHunks,
 } from "@/app/lib/actions";
-import type { getShow } from "@/app/lib/data";
+import type { getSet } from "@/app/lib/data";
 
-type Show = NonNullable<Awaited<ReturnType<typeof getShow>>>;
-type ShowType = "SHOW" | "OPEN_MIC";
+type SetRecord = NonNullable<Awaited<ReturnType<typeof getSet>>>;
+type SetType = "SHOW" | "OPEN_MIC";
 
 // Dates are stored as UTC midnight — always read/write the UTC date components
 // to avoid timezone rollovers when displaying or editing.
@@ -21,23 +21,23 @@ function utcDateStr(date: Date | string) {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
 }
 
-function showLabel(type: string) {
+function setTypeLabel(type: string) {
   return type === "SHOW" ? "Show" : "Open mic";
 }
 
 interface Props {
-  show: Show;
+  set: SetRecord;
 }
 
-export default function ShowDetail({ show }: Props) {
+export default function SetDetail({ set }: Props) {
   // ── Set list order ────────────────────────────────────────────────────────
-  const [orderedHunks, setOrderedHunks] = useState(show.hunks);
+  const [orderedHunks, setOrderedHunks] = useState(set.hunks);
 
-  function moveShowHunk(index: number, dir: -1 | 1) {
+  function moveSetHunk(index: number, dir: -1 | 1) {
     const next = [...orderedHunks];
     [next[index], next[index + dir]] = [next[index + dir], next[index]];
     setOrderedHunks(next);
-    reorderShowHunks(show.id, next.map((h) => h.id)).catch(() =>
+    reorderSetHunks(set.id, next.map((h) => h.id)).catch(() =>
       setOrderedHunks(orderedHunks)
     );
   }
@@ -46,7 +46,7 @@ export default function ShowDetail({ show }: Props) {
   const [lineRatings, setLineRatings] = useState<Record<string, number | null>>(
     () =>
       Object.fromEntries(
-        show.hunks.flatMap((sh) =>
+        set.hunks.flatMap((sh) =>
           sh.bits.flatMap((sb) => sb.lines.map((sl) => [sl.id, sl.rating]))
         )
       )
@@ -56,21 +56,21 @@ export default function ShowDetail({ show }: Props) {
   const [highlightHits, setHighlightHits] = useState(true);
   const [ratingsLocked, setRatingsLocked] = useState(true);
   const [editingMeta, setEditingMeta] = useState(false);
-  const [metaDate, setMetaDate] = useState(() => utcDateStr(show.date));
-  const [metaVenue, setMetaVenue] = useState(show.venue ?? "");
-  const [metaType, setMetaType] = useState<ShowType>(show.type as ShowType);
-  const [metaNotes, setMetaNotes] = useState(show.notes ?? "");
-  const [displayDate, setDisplayDate] = useState(show.date);
-  const [displayVenue, setDisplayVenue] = useState(show.venue ?? "");
-  const [displayType, setDisplayType] = useState(show.type);
-  const [displayNotes, setDisplayNotes] = useState(show.notes ?? "");
+  const [metaDate, setMetaDate] = useState(() => utcDateStr(set.date));
+  const [metaVenue, setMetaVenue] = useState(set.venue ?? "");
+  const [metaType, setMetaType] = useState<SetType>(set.type as SetType);
+  const [metaNotes, setMetaNotes] = useState(set.notes ?? "");
+  const [displayDate, setDisplayDate] = useState(set.date);
+  const [displayVenue, setDisplayVenue] = useState(set.venue ?? "");
+  const [displayType, setDisplayType] = useState(set.type);
+  const [displayNotes, setDisplayNotes] = useState(set.notes ?? "");
   const [metaPending, startMetaTransition] = useTransition();
 
   // ── Rating handlers (fire-and-forget, optimistic local update) ────────────
   function rateLine(slId: string, rating: number | null) {
     setLineRatings((prev) => ({ ...prev, [slId]: rating }));
-    updateShowLineRating(slId, rating).catch(() => {
-      const orig = show.hunks.flatMap((h) => h.bits.flatMap((b) => b.lines)).find((l) => l.id === slId)?.rating ?? null;
+    updateSetLineRating(slId, rating).catch(() => {
+      const orig = set.hunks.flatMap((h) => h.bits.flatMap((b) => b.lines)).find((l) => l.id === slId)?.rating ?? null;
       setLineRatings((prev) => ({ ...prev, [slId]: orig }));
     });
   }
@@ -78,7 +78,7 @@ export default function ShowDetail({ show }: Props) {
   // ── Meta save ──────────────────────────────────────────────────────────────
   function saveMeta() {
     startMetaTransition(async () => {
-      await updateShowMeta(show.id, {
+      await updateSetMeta(set.id, {
         date: metaDate,
         venue: metaVenue,
         type: metaType,
@@ -95,7 +95,7 @@ export default function ShowDetail({ show }: Props) {
   function cancelMeta() {
     setMetaDate(utcDateStr(displayDate));
     setMetaVenue(displayVenue);
-    setMetaType(displayType as ShowType);
+    setMetaType(displayType as SetType);
     setMetaNotes(displayNotes);
     setEditingMeta(false);
   }
@@ -120,7 +120,7 @@ export default function ShowDetail({ show }: Props) {
                 <label className="block text-xs font-medium mb-1 text-neutral-500">Type</label>
                 <select
                   value={metaType}
-                  onChange={(e) => setMetaType(e.target.value as ShowType)}
+                  onChange={(e) => setMetaType(e.target.value as SetType)}
                   className="w-full border border-neutral-300 dark:border-neutral-700 rounded px-2 py-1.5 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-foreground"
                 >
                   <option value="OPEN_MIC">Open mic</option>
@@ -176,7 +176,7 @@ export default function ShowDetail({ show }: Props) {
                 })}
               </h1>
               <p className="text-neutral-500 mt-1">
-                {showLabel(displayType)}
+                {setTypeLabel(displayType)}
                 {displayVenue && ` · ${displayVenue}`}
               </p>
               {displayNotes && (
@@ -228,7 +228,7 @@ export default function ShowDetail({ show }: Props) {
               <span className="font-semibold flex-1">{sh.hunkVersion.title}</span>
               <div className="flex gap-0.5">
                 <button
-                  onClick={() => moveShowHunk(index, -1)}
+                  onClick={() => moveSetHunk(index, -1)}
                   disabled={index === 0}
                   className="text-neutral-400 hover:text-foreground disabled:opacity-20 px-1"
                   aria-label="Move up"
@@ -236,7 +236,7 @@ export default function ShowDetail({ show }: Props) {
                   ↑
                 </button>
                 <button
-                  onClick={() => moveShowHunk(index, 1)}
+                  onClick={() => moveSetHunk(index, 1)}
                   disabled={index === orderedHunks.length - 1}
                   className="text-neutral-400 hover:text-foreground disabled:opacity-20 px-1"
                   aria-label="Move down"

@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { db } from "./lib/db";
-import { getShows } from "./lib/data";
+import { getSets } from "./lib/data";
 
 export default async function DashboardPage() {
-  const [hunkCount, bitCount, shows] = await Promise.all([
+  const [hunkCount, bitCount, sets] = await Promise.all([
     db.hunk.count(),
     db.bit.count(),
-    getShows(),
+    getSets(),
   ]);
 
-  const recentShows = shows.slice(0, 5);
+  const recentSets = sets.slice(0, 5);
 
   return (
     <div className="space-y-8">
@@ -20,7 +20,7 @@ export default async function DashboardPage() {
         {[
           { label: "Hunks", value: hunkCount, href: "/hunks" },
           { label: "Bits", value: bitCount, href: "/bits" },
-          { label: "Shows", value: shows.length, href: "/shows" },
+          { label: "Sets", value: sets.length, href: "/sets" },
         ].map(({ label, value, href }) => (
           <Link
             key={label}
@@ -33,37 +33,37 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* Recent shows */}
+      {/* Recent sets */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold">Recent shows</h2>
-          <Link href="/shows/new" className="text-sm text-neutral-500 hover:text-foreground">
-            + Log show
+          <h2 className="font-semibold">Recent sets</h2>
+          <Link href="/sets/new" className="text-sm text-neutral-500 hover:text-foreground">
+            + Log set
           </Link>
         </div>
-        {recentShows.length === 0 ? (
-          <p className="text-neutral-500 text-sm">No shows logged yet.</p>
+        {recentSets.length === 0 ? (
+          <p className="text-neutral-500 text-sm">No sets logged yet.</p>
         ) : (
           <ul className="space-y-2">
-            {recentShows.map((show) => (
-              <li key={show.id}>
+            {recentSets.map((set) => (
+              <li key={set.id}>
                 <Link
-                  href={`/shows/${show.id}`}
+                  href={`/sets/${set.id}`}
                   className="flex items-center justify-between p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors text-sm"
                 >
                   <span>
-                    {new Date(show.date).toLocaleDateString("en-US", {
+                    {new Date(set.date).toLocaleDateString("en-US", {
                       weekday: "short",
                       month: "short",
                       day: "numeric",
                       timeZone: "UTC",
                     })}
-                    {show.venue && (
-                      <span className="text-neutral-500 ml-2">@ {show.venue}</span>
+                    {set.venue && (
+                      <span className="text-neutral-500 ml-2">@ {set.venue}</span>
                     )}
                   </span>
                   <span className="text-neutral-500">
-                    {show.hunks.length} hunk{show.hunks.length !== 1 ? "s" : ""}
+                    {set.hunks.length} hunk{set.hunks.length !== 1 ? "s" : ""}
                   </span>
                 </Link>
               </li>

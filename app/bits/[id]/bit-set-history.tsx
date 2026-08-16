@@ -1,11 +1,11 @@
 import Link from "next/link";
 import BitScore from "@/app/components/bit-score";
 import { calculateBitScore } from "@/app/lib/bit-score";
-import type { getBitShowHistory } from "@/app/lib/data";
+import type { getBitSetHistory } from "@/app/lib/data";
 
-type History = Awaited<ReturnType<typeof getBitShowHistory>>;
+type History = Awaited<ReturnType<typeof getBitSetHistory>>;
 
-function formatShowDate(date: Date) {
+function formatSetDate(date: Date) {
   return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -14,7 +14,7 @@ function formatShowDate(date: Date) {
   });
 }
 
-function showLabel(type: string) {
+function setTypeLabel(type: string) {
   return type === "SHOW" ? "Show" : "Open mic";
 }
 
@@ -42,11 +42,11 @@ function StaticRating({ value }: { value: number | null }) {
   );
 }
 
-export default function BitShowHistory({ history }: { history: History }) {
+export default function BitSetHistory({ history }: { history: History }) {
   return (
     <section className="mt-10">
       <div className="flex items-baseline justify-between gap-4 mb-4">
-        <h2 className="text-lg font-semibold">Show history</h2>
+        <h2 className="text-lg font-semibold">Set history</h2>
         <span className="text-sm text-neutral-500">
           {history.length} performance{history.length === 1 ? "" : "s"}
         </span>
@@ -54,12 +54,12 @@ export default function BitShowHistory({ history }: { history: History }) {
 
       {history.length === 0 ? (
         <p className="text-sm text-neutral-500 rounded-lg border border-dashed border-neutral-300 dark:border-neutral-700 p-4">
-          This bit has not appeared in a logged show yet.
+          This bit has not appeared in a logged set yet.
         </p>
       ) : (
         <ol className="relative ml-2 border-l border-neutral-200 dark:border-neutral-800 space-y-5">
           {history.map((performance) => {
-            const show = performance.showHunk.show;
+            const set = performance.showHunk.show;
             const score = calculateBitScore(performance.lines);
 
             return (
@@ -69,15 +69,15 @@ export default function BitShowHistory({ history }: { history: History }) {
                   <div className="flex items-start justify-between gap-4 px-4 py-3 bg-neutral-50 dark:bg-neutral-900/40 border-b border-neutral-100 dark:border-neutral-800">
                     <div>
                       <Link
-                        href={`/shows/${show.id}`}
+                        href={`/sets/${set.id}`}
                         className="font-medium hover:underline underline-offset-4"
                       >
-                        {formatShowDate(show.date)}
-                        {show.venue ? ` · ${show.venue}` : ""}
+                        {formatSetDate(set.date)}
+                        {set.venue ? ` · ${set.venue}` : ""}
                       </Link>
                       <div className="flex items-center gap-2 text-xs text-neutral-500 mt-1">
                         <span>
-                          {showLabel(show.type)} · {performance.showHunk.hunkVersion.title} · bit v
+                          {setTypeLabel(set.type)} · {performance.showHunk.hunkVersion.title} · bit v
                           {performance.bitVersion.version}
                         </span>
                         <BitScore score={score} />

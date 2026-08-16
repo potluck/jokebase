@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "./db";
 import { LineType } from "@/app/generated/prisma/client";
-type ShowType = "SHOW" | "OPEN_MIC";
+type SetType = "SHOW" | "OPEN_MIC";
 
 // ─── Hunks ────────────────────────────────────────────────────────────────────
 
@@ -15,7 +15,7 @@ export async function createHunk(title: string) {
   });
   revalidatePath("/");
   revalidatePath("/hunks");
-  revalidatePath("/shows/new");
+  revalidatePath("/sets/new");
   redirect("/hunks");
 }
 
@@ -47,7 +47,7 @@ export async function updateHunk(
   });
   revalidatePath("/hunks");
   revalidatePath(`/hunks/${hunkId}`);
-  revalidatePath("/shows/new");
+  revalidatePath("/sets/new");
   redirect(`/hunks/${hunkId}`);
 }
 
@@ -168,35 +168,35 @@ export async function updateLineType(lineId: string, type: LineType) {
   await db.line.update({ where: { id: lineId }, data: { type } });
 }
 
-// ─── Shows ────────────────────────────────────────────────────────────────────
+// ─── Sets ────────────────────────────────────────────────────────────────────
 
-export interface ShowLineInput {
+export interface SetLineInput {
   lineVersionId: string;
   rating: number | null;
 }
 
-export interface ShowBitInput {
+export interface SetBitInput {
   bitVersionId: string;
   rating: number | null;
-  lines: ShowLineInput[];
+  lines: SetLineInput[];
 }
 
-export interface ShowHunkInput {
+export interface SetHunkInput {
   hunkVersionId: string;
   rating: number | null;
-  bits: ShowBitInput[];
+  bits: SetBitInput[];
 }
 
-export interface CreateShowInput {
+export interface CreateSetInput {
   date: string; // ISO date string
   venue: string;
-  type: ShowType;
+  type: SetType;
   notes: string;
-  hunks: ShowHunkInput[];
+  hunks: SetHunkInput[];
 }
 
-export async function createShow(input: CreateShowInput) {
-  const show = await db.show.create({
+export async function createSet(input: CreateSetInput) {
+  const set = await db.show.create({
     data: {
       date: new Date(input.date),
       venue: input.venue || null,
@@ -209,7 +209,7 @@ export async function createShow(input: CreateShowInput) {
     const h = input.hunks[hi];
     const showHunk = await db.showHunk.create({
       data: {
-        showId: show.id,
+        showId: set.id,
         hunkVersionId: h.hunkVersionId,
         order: hi,
         rating: h.rating,
@@ -242,37 +242,37 @@ export async function createShow(input: CreateShowInput) {
   }
 
   revalidatePath("/");
-  revalidatePath("/shows");
-  redirect(`/shows/${show.id}`);
+  revalidatePath("/sets");
+  redirect(`/sets/${set.id}`);
 }
 
-export async function reorderShowHunks(showId: string, orderedShowHunkIds: string[]) {
+export async function reorderSetHunks(setId: string, orderedSetHunkIds: string[]) {
   await Promise.all(
-    orderedShowHunkIds.map((id, i) =>
+    orderedSetHunkIds.map((id, i) =>
       db.showHunk.update({ where: { id }, data: { order: i } })
     )
   );
-  revalidatePath(`/shows/${showId}`);
+  revalidatePath(`/sets/${setId}`);
 }
 
-export async function updateShowHunkRating(showHunkId: string, rating: number | null) {
+export async function updateSetHunkRating(showHunkId: string, rating: number | null) {
   await db.showHunk.update({ where: { id: showHunkId }, data: { rating } });
 }
 
-export async function updateShowBitRating(showBitId: string, rating: number | null) {
+export async function updateSetBitRating(showBitId: string, rating: number | null) {
   await db.showBit.update({ where: { id: showBitId }, data: { rating } });
 }
 
-export async function updateShowLineRating(showLineId: string, rating: number | null) {
+export async function updateSetLineRating(showLineId: string, rating: number | null) {
   await db.showLine.update({ where: { id: showLineId }, data: { rating } });
 }
 
-export async function updateShowMeta(
-  showId: string,
-  data: { date: string; venue: string; type: ShowType; notes: string }
+export async function updateSetMeta(
+  setId: string,
+  data: { date: string; venue: string; type: SetType; notes: string }
 ) {
   await db.show.update({
-    where: { id: showId },
+    where: { id: setId },
     data: {
       date: new Date(data.date),
       venue: data.venue || null,
@@ -281,6 +281,6 @@ export async function updateShowMeta(
     },
   });
   revalidatePath("/");
-  revalidatePath("/shows");
-  revalidatePath(`/shows/${showId}`);
+  revalidatePath("/sets");
+  revalidatePath(`/sets/${setId}`);
 }

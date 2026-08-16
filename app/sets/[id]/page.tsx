@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getShow } from "@/app/lib/data";
-import ShowDetail from "./show-detail";
+import { getSet } from "@/app/lib/data";
+import SetDetail from "./set-detail";
 
 export async function generateMetadata({
   params,
@@ -9,22 +9,22 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const show = await getShow(id);
-  if (!show) return {};
-  const date = new Date(show.date).toLocaleDateString("en-US", {
+  const set = await getSet(id);
+  if (!set) return {};
+  const date = new Date(set.date).toLocaleDateString("en-US", {
     weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
   });
-  const title = show.venue ? `${date} @ ${show.venue}` : date;
+  const title = set.venue ? `${date} @ ${set.venue}` : date;
   return { title };
 }
 
-export default async function ShowPage({
+export default async function SetPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const show = await getShow(id);
-  if (!show) notFound();
-  return <ShowDetail show={show} />;
+  const set = await getSet(id);
+  if (!set) notFound();
+  return <SetDetail set={set} />;
 }

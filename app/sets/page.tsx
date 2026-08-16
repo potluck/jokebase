@@ -1,46 +1,46 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getShows } from "@/app/lib/data";
+import { getSets } from "@/app/lib/data";
 
-export const metadata: Metadata = { title: "Shows" };
+export const metadata: Metadata = { title: "Sets" };
 
-function showLabel(type: string) {
+function setTypeLabel(type: string) {
   return type === "SHOW" ? "Show" : "Open mic";
 }
 
-export default async function ShowsPage() {
-  const shows = await getShows();
+export default async function SetsPage() {
+  const sets = await getSets();
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Shows</h1>
+        <h1 className="text-2xl font-bold">Sets</h1>
         <Link
-          href="/shows/new"
+          href="/sets/new"
           className="text-sm bg-foreground text-background px-3 py-1.5 rounded hover:opacity-80"
         >
-          + Log show
+          + Log set
         </Link>
       </div>
 
-      {shows.length === 0 ? (
-        <p className="text-neutral-500">No shows logged yet.</p>
+      {sets.length === 0 ? (
+        <p className="text-neutral-500">No sets logged yet.</p>
       ) : (
         <ul className="space-y-2">
-          {shows.map((show) => {
-            const totalLines = show.hunks.reduce(
+          {sets.map((set) => {
+            const totalLines = set.hunks.reduce(
               (acc, h) => acc + h.bits.reduce((a, b) => a + b.lines.length, 0),
               0
             );
             return (
-              <li key={show.id}>
+              <li key={set.id}>
                 <Link
-                  href={`/shows/${show.id}`}
+                  href={`/sets/${set.id}`}
                   className="flex items-center justify-between p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors"
                 >
                   <div>
                     <span className="font-medium">
-                      {new Date(show.date).toLocaleDateString("en-US", {
+                      {new Date(set.date).toLocaleDateString("en-US", {
                         weekday: "short",
                         year: "numeric",
                         month: "short",
@@ -48,13 +48,13 @@ export default async function ShowsPage() {
                         day: "numeric",
                       })}
                     </span>
-                    {show.venue && (
-                      <span className="text-neutral-500 ml-2">@ {show.venue}</span>
+                    {set.venue && (
+                      <span className="text-neutral-500 ml-2">@ {set.venue}</span>
                     )}
                   </div>
                   <span className="text-sm text-neutral-500">
-                    {showLabel(show.type)} · {show.hunks.length} hunk
-                    {show.hunks.length !== 1 ? "s" : ""} · {totalLines} line
+                    {setTypeLabel(set.type)} · {set.hunks.length} hunk
+                    {set.hunks.length !== 1 ? "s" : ""} · {totalLines} line
                     {totalLines !== 1 ? "s" : ""}
                   </span>
                 </Link>

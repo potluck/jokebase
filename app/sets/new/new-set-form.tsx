@@ -3,10 +3,10 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Rating from "@/app/components/rating";
-import { createShow } from "@/app/lib/actions";
-import type { CreateShowInput, ShowHunkInput, ShowBitInput, ShowLineInput } from "@/app/lib/actions";
+import { createSet } from "@/app/lib/actions";
+import type { CreateSetInput, SetHunkInput, SetBitInput, SetLineInput } from "@/app/lib/actions";
 import type { getLatestHunkVersions } from "@/app/lib/data";
-type ShowType = "SHOW" | "OPEN_MIC";
+type SetType = "SHOW" | "OPEN_MIC";
 
 type HunkVersions = Awaited<ReturnType<typeof getLatestHunkVersions>>;
 type HunkVersion = HunkVersions[number];
@@ -51,12 +51,12 @@ function initHunkState(hv: HunkVersion): HunkState {
   return { selected: false, rating: null, bits };
 }
 
-export default function NewShowForm({ hunks }: Props) {
+export default function NewSetForm({ hunks }: Props) {
   const d = new Date();
   const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const [date, setDate] = useState(today);
   const [venue, setVenue] = useState("");
-  const [type, setType] = useState<ShowType>("OPEN_MIC");
+  const [type, setType] = useState<SetType>("OPEN_MIC");
   const [notes, setNotes] = useState("");
   const [orderedHunks, setOrderedHunks] = useState(hunks);
   const [hunkState, setHunkState] = useState<Record<string, HunkState>>(
@@ -138,17 +138,17 @@ export default function NewShowForm({ hunks }: Props) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const selectedHunks: ShowHunkInput[] = [];
+    const selectedHunks: SetHunkInput[] = [];
     for (const hv of orderedHunks) {
       const hs = hunkState[hv.id];
       if (!hs.selected) continue;
 
-      const selectedBits: ShowBitInput[] = [];
+      const selectedBits: SetBitInput[] = [];
       for (const hvb of hv.bits) {
         const bs = hs.bits[hvb.bitVersionId];
         if (!bs.selected) continue;
 
-        const selectedLines: ShowLineInput[] = bs.lines
+        const selectedLines: SetLineInput[] = bs.lines
           .filter((l) => l.selected)
           .map((l) => ({ lineVersionId: l.lineVersionId, rating: l.rating }));
 
@@ -166,9 +166,9 @@ export default function NewShowForm({ hunks }: Props) {
       });
     }
 
-    const input: CreateShowInput = { date, venue, type, notes, hunks: selectedHunks };
+    const input: CreateSetInput = { date, venue, type, notes, hunks: selectedHunks };
     startTransition(async () => {
-      await createShow(input);
+      await createSet(input);
     });
   }
 
@@ -176,10 +176,10 @@ export default function NewShowForm({ hunks }: Props) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Log a show</h1>
+      <h1 className="text-2xl font-bold mb-6">Log a set</h1>
       <form onSubmit={handleSubmit} className="space-y-8">
 
-        {/* ── Show details ── */}
+        {/* ── Set details ── */}
         <section className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -196,7 +196,7 @@ export default function NewShowForm({ hunks }: Props) {
               <label className="block text-sm font-medium mb-1">Type</label>
               <select
                 value={type}
-                onChange={(e) => setType(e.target.value as ShowType)}
+                onChange={(e) => setType(e.target.value as SetType)}
                 className="w-full border border-neutral-300 dark:border-neutral-700 rounded px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-foreground"
               >
                 <option value="OPEN_MIC">Open mic</option>
@@ -376,7 +376,7 @@ export default function NewShowForm({ hunks }: Props) {
             disabled={pending || selectedCount === 0}
             className="bg-foreground text-background px-4 py-2 rounded text-sm font-medium hover:opacity-80 disabled:opacity-40"
           >
-            {pending ? "Saving…" : `Save show (${selectedCount} hunk${selectedCount !== 1 ? "s" : ""})`}
+            {pending ? "Saving…" : `Save set (${selectedCount} hunk${selectedCount !== 1 ? "s" : ""})`}
           </button>
           <button
             type="button"

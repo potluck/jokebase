@@ -7,7 +7,7 @@ const links = [
   { href: "/", label: "Dashboard" },
   { href: "/hunks", label: "Hunks" },
   { href: "/bits", label: "Bits" },
-  { href: "/shows", label: "Shows" },
+  { href: "/sets", label: "Sets" },
 ];
 
 export default function Nav() {
