@@ -1,7 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import BitEditor from "./bit-editor";
-import { getAllBitVersions, getLatestBitVersion } from "@/app/lib/data";
+import BitShowHistory from "./bit-show-history";
+import {
+  getAllBitVersions,
+  getBitShowHistory,
+  getLatestBitVersion,
+} from "@/app/lib/data";
 
 export async function generateMetadata({
   params,
@@ -20,18 +25,22 @@ export default async function BitPage({
 }) {
   const { id } = await params;
 
-  const [latestVersion, allVersions] = await Promise.all([
+  const [latestVersion, allVersions, showHistory] = await Promise.all([
     getLatestBitVersion(id),
     getAllBitVersions(id),
+    getBitShowHistory(id),
   ]);
 
   if (!latestVersion) notFound();
 
   return (
-    <BitEditor
-      bitId={id}
-      latestVersion={latestVersion}
-      allVersions={allVersions}
-    />
+    <>
+      <BitEditor
+        bitId={id}
+        latestVersion={latestVersion}
+        allVersions={allVersions}
+      />
+      <BitShowHistory history={showHistory} />
+    </>
   );
 }

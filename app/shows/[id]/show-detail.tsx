@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import BitScore from "@/app/components/bit-score";
 import Rating from "@/app/components/rating";
+import { calculateBitScore } from "@/app/lib/bit-score";
 import {
-  updateShowHunkRating,
-  updateShowBitRating,
   updateShowLineRating,
   updateShowMeta,
   reorderShowHunks,
@@ -42,16 +42,7 @@ export default function ShowDetail({ show }: Props) {
     );
   }
 
-  // ── Rating state: keyed by entity id ──────────────────────────────────────
-  const [hunkRatings, setHunkRatings] = useState<Record<string, number | null>>(
-    () => Object.fromEntries(show.hunks.map((sh) => [sh.id, sh.rating]))
-  );
-  const [bitRatings, setBitRatings] = useState<Record<string, number | null>>(
-    () =>
-      Object.fromEntries(
-        show.hunks.flatMap((sh) => sh.bits.map((sb) => [sb.id, sb.rating]))
-      )
-  );
+  // ── Rating state: keyed by line id ────────────────────────────────────────
   const [lineRatings, setLineRatings] = useState<Record<string, number | null>>(
     () =>
       Object.fromEntries(
@@ -76,21 +67,6 @@ export default function ShowDetail({ show }: Props) {
   const [metaPending, startMetaTransition] = useTransition();
 
   // ── Rating handlers (fire-and-forget, optimistic local update) ────────────
-  function rateHunk(shId: string, rating: number | null) {
-    setHunkRatings((prev) => ({ ...prev, [shId]: rating }));
-    updateShowHunkRating(shId, rating).catch(() =>
-      setHunkRatings((prev) => ({ ...prev, [shId]: show.hunks.find((h) => h.id === shId)?.rating ?? null }))
-    );
-  }
-
-  function rateBit(sbId: string, rating: number | null) {
-    setBitRatings((prev) => ({ ...prev, [sbId]: rating }));
-    updateShowBitRating(sbId, rating).catch(() => {
-      const orig = show.hunks.flatMap((h) => h.bits).find((b) => b.id === sbId)?.rating ?? null;
-      setBitRatings((prev) => ({ ...prev, [sbId]: orig }));
-    });
-  }
-
   function rateLine(slId: string, rating: number | null) {
     setLineRatings((prev) => ({ ...prev, [slId]: rating }));
     updateShowLineRating(slId, rating).catch(() => {
@@ -272,10 +248,19 @@ export default function ShowDetail({ show }: Props) {
 
             {/* Bits */}
             <div className="px-4 py-3 space-y-4">
-              {sh.bits.map((sb) => (
+              {sh.bits.map((sb) => {
+                const score = calculateBitScore(
+                  sb.lines.map((line) => ({
+                    ...line,
+                    rating: lineRatings[line.id],
+                  }))
+                );
+
+                return (
                 <div key={sb.id}>
-                  <div className="mb-2">
+                  <div className="flex items-center gap-2 mb-2">
                     <span className="font-medium text-sm">{sb.bitVersion.title}</span>
+                    <BitScore score={score} />
                   </div>
 
                   {/* Lines */}
@@ -306,7 +291,8 @@ export default function ShowDetail({ show }: Props) {
                     ))}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}
