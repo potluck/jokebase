@@ -10,7 +10,11 @@ const links = [
   { href: "/sets", label: "Sets" },
 ];
 
-export default function Nav() {
+export default function Nav({
+  user,
+}: {
+  user: { name: string; email: string } | null;
+}) {
   const path = usePathname();
 
   return (
@@ -18,7 +22,7 @@ export default function Nav() {
       <span className="font-mono font-bold text-sm tracking-tight mr-2">
         jokebase
       </span>
-      {links.map(({ href, label }) => {
+      {user && links.map(({ href, label }) => {
         const active =
           href === "/" ? path === "/" : path.startsWith(href);
         return (
@@ -35,6 +39,26 @@ export default function Nav() {
           </Link>
         );
       })}
+      {user && (
+        <form
+          action="/auth/logout"
+          method="post"
+          className="ml-auto flex items-center gap-3"
+        >
+          <span
+            className="text-sm text-neutral-500 hidden sm:inline"
+            title={user.email}
+          >
+            {user.name}
+          </span>
+          <button
+            type="submit"
+            className="text-sm text-neutral-500 hover:text-foreground"
+          >
+            Log out
+          </button>
+        </form>
+      )}
     </nav>
   );
 }
