@@ -35,8 +35,9 @@ export async function getLatestHunkVersions() {
 }
 
 export async function getLatestHunkVersionsForSetForm() {
-  const [hunks, performances] = await Promise.all([
+  const [hunkVersions, latestBits, performances] = await Promise.all([
     getLatestHunkVersions(),
+    getLatestBitVersions(),
     db.showHunk.findMany({
       select: {
         order: true,
@@ -46,6 +47,19 @@ export async function getLatestHunkVersionsForSetForm() {
       },
     }),
   ]);
+
+  // A hunk version snapshots the bit versions it was saved with. When logging a
+  // set, show and record each bit's current version instead.
+  const latestBitById = new Map(latestBits.map((bv) => [bv.bitId, bv]));
+  const hunks = hunkVersions.map((hv) => ({
+    ...hv,
+    bits: hv.bits.map((hvb) => {
+      const latest = latestBitById.get(hvb.bitId);
+      return latest
+        ? { ...hvb, bitVersionId: latest.id, bitVersion: latest }
+        : hvb;
+    }),
+  }));
 
   const latestPerformanceByHunk = new Map<string, (typeof performances)[number]>();
   for (const performance of performances) {
