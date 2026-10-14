@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { db } from "./lib/db";
 import { getSets } from "./lib/data";
+import { getSession, isOwner } from "./lib/session";
 
 export default async function DashboardPage() {
-  const [hunkCount, bitCount, sets] = await Promise.all([
+  const [hunkCount, bitCount, sets, session] = await Promise.all([
     db.hunk.count(),
     db.bit.count(),
     getSets(),
+    getSession(),
   ]);
+  const canEdit = isOwner(session);
 
   const recentSets = sets.slice(0, 5);
 
@@ -37,9 +40,11 @@ export default async function DashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold">Recent sets</h2>
-          <Link href="/sets/new" className="text-sm text-neutral-500 hover:text-foreground">
-            + Log set
-          </Link>
+          {canEdit && (
+            <Link href="/sets/new" className="text-sm text-neutral-500 hover:text-foreground">
+              + Log set
+            </Link>
+          )}
         </div>
         {recentSets.length === 0 ? (
           <p className="text-neutral-500 text-sm">No sets logged yet.</p>

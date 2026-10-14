@@ -1,23 +1,26 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { getSession, isOwner } from "@/app/lib/session";
 import BitScore from "@/app/components/bit-score";
 import { getLatestBitVersionsWithSetCounts } from "@/app/lib/data";
 
 export const metadata: Metadata = { title: "Bits" };
 
 export default async function BitsPage() {
-  const bits = await getLatestBitVersionsWithSetCounts();
+  const [bits, session] = await Promise.all([getLatestBitVersionsWithSetCounts(), getSession()]);
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Bits</h1>
-        <Link
-          href="/bits/new"
-          className="text-sm bg-foreground text-background px-3 py-1.5 rounded hover:opacity-80"
-        >
-          + New bit
-        </Link>
+        {isOwner(session) && (
+          <Link
+            href="/bits/new"
+            className="text-sm bg-foreground text-background px-3 py-1.5 rounded hover:opacity-80"
+          >
+            + New bit
+          </Link>
+        )}
       </div>
 
       {bits.length === 0 ? (

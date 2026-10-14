@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getSet } from "@/app/lib/data";
 import SetDetail from "./set-detail";
+import { getSession, isOwner } from "@/app/lib/session";
 
 export async function generateMetadata({
   params,
@@ -24,7 +25,7 @@ export default async function SetPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const set = await getSet(id);
+  const [set, session] = await Promise.all([getSet(id), getSession()]);
   if (!set) notFound();
-  return <SetDetail set={set} />;
+  return <SetDetail set={set} canEdit={isOwner(session)} />;
 }

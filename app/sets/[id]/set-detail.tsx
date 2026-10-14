@@ -27,9 +27,10 @@ function setTypeLabel(type: string) {
 
 interface Props {
   set: SetRecord;
+  canEdit: boolean;
 }
 
-export default function SetDetail({ set }: Props) {
+export default function SetDetail({ set, canEdit }: Props) {
   // ── Set list order ────────────────────────────────────────────────────────
   const [orderedHunks, setOrderedHunks] = useState(set.hunks);
 
@@ -185,12 +186,14 @@ export default function SetDetail({ set }: Props) {
                 </p>
               )}
             </div>
-            <button
-              onClick={() => setEditingMeta(true)}
-              className="text-sm text-neutral-400 hover:text-foreground shrink-0 ml-4"
-            >
-              Edit
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => setEditingMeta(true)}
+                className="text-sm text-neutral-400 hover:text-foreground shrink-0 ml-4"
+              >
+                Edit
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -207,6 +210,7 @@ export default function SetDetail({ set }: Props) {
         >
           Highlight hits
         </button>
+        {canEdit && (
         <button
           onClick={() => setRatingsLocked((v) => !v)}
           className={`text-sm px-3 py-1.5 rounded border transition-colors ${
@@ -217,6 +221,7 @@ export default function SetDetail({ set }: Props) {
         >
           {ratingsLocked ? "🔒 Locked" : "🔓 Lock ratings"}
         </button>
+        )}
       </div>
 
       {/* ── Set list with ratings ── */}
@@ -226,6 +231,7 @@ export default function SetDetail({ set }: Props) {
             {/* Hunk row */}
             <div className="flex items-center px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
               <span className="font-semibold flex-1">{sh.hunkVersion.title}</span>
+              {canEdit && (
               <div className="flex gap-0.5">
                 <button
                   onClick={() => moveSetHunk(index, -1)}
@@ -244,6 +250,7 @@ export default function SetDetail({ set }: Props) {
                   ↓
                 </button>
               </div>
+              )}
             </div>
 
             {/* Bits */}
@@ -285,7 +292,7 @@ export default function SetDetail({ set }: Props) {
                           value={lineRatings[sl.id]}
                           onChange={(r) => rateLine(sl.id, r)}
                           size="sm"
-                          disabled={ratingsLocked}
+                          disabled={!canEdit || ratingsLocked}
                         />
                       </div>
                     ))}

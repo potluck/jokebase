@@ -71,3 +71,14 @@ export async function getSession(): Promise<Session | null> {
   const store = await cookies();
   return decodeSession(store.get(SESSION_COOKIE)?.value);
 }
+
+// The only account allowed to change anything. Everyone else is read-only.
+export const OWNER_EMAIL = "potluck.mittal@gmail.com";
+
+export function isOwner(session: Session | null): boolean {
+  return session?.email.toLowerCase() === OWNER_EMAIL;
+}
+
+export async function requireOwner(): Promise<void> {
+  if (!isOwner(await getSession())) throw new Error("Read-only access");
+}
