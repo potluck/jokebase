@@ -1,22 +1,25 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { getSession, isOwner } from "@/app/lib/session";
 import { getLatestHunkVersions } from "@/app/lib/data";
 
 export const metadata: Metadata = { title: "Hunks" };
 
 export default async function HunksPage() {
-  const hunks = await getLatestHunkVersions();
+  const [hunks, session] = await Promise.all([getLatestHunkVersions(), getSession()]);
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Hunks</h1>
-        <Link
-          href="/hunks/new"
-          className="text-sm bg-foreground text-background px-3 py-1.5 rounded hover:opacity-80"
-        >
-          + New hunk
-        </Link>
+        {isOwner(session) && (
+          <Link
+            href="/hunks/new"
+            className="text-sm bg-foreground text-background px-3 py-1.5 rounded hover:opacity-80"
+          >
+            + New hunk
+          </Link>
+        )}
       </div>
 
       {hunks.length === 0 ? (

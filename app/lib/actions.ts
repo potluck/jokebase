@@ -3,12 +3,14 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "./db";
+import { requireOwner } from "./session";
 import { LineType } from "@/app/generated/prisma/client";
 type SetType = "SHOW" | "OPEN_MIC";
 
 // ─── Hunks ────────────────────────────────────────────────────────────────────
 
 export async function createHunk(title: string) {
+  await requireOwner();
   const hunk = await db.hunk.create({ data: {} });
   await db.hunkVersion.create({
     data: { hunkId: hunk.id, version: 1, title },
@@ -25,6 +27,7 @@ export async function updateHunk(
   // Each entry: the stable bitId + the current bitVersionId to snapshot
   bits: { bitId: string; bitVersionId: string }[]
 ) {
+  await requireOwner();
   const latest = await db.hunkVersion.findFirst({
     where: { hunkId },
     orderBy: { version: "desc" },
@@ -54,6 +57,7 @@ export async function updateHunk(
 // ─── Bits ─────────────────────────────────────────────────────────────────────
 
 export async function createBit(title: string, rawText: string) {
+  await requireOwner();
   const lineTexts = rawText
     .split("\n")
     .map((l) => l.trim())
@@ -103,6 +107,7 @@ export async function updateBit(
     type: LineType;
   }[]
 ) {
+  await requireOwner();
   const latest = await db.bitVersion.findFirst({
     where: { bitId },
     orderBy: { version: "desc" },
@@ -165,6 +170,7 @@ export async function updateBit(
 }
 
 export async function updateLineType(lineId: string, type: LineType) {
+  await requireOwner();
   await db.line.update({ where: { id: lineId }, data: { type } });
 }
 
@@ -196,6 +202,7 @@ export interface CreateSetInput {
 }
 
 export async function createSet(input: CreateSetInput) {
+  await requireOwner();
   const set = await db.show.create({
     data: {
       date: new Date(input.date),
@@ -247,6 +254,7 @@ export async function createSet(input: CreateSetInput) {
 }
 
 export async function reorderSetHunks(setId: string, orderedSetHunkIds: string[]) {
+  await requireOwner();
   await Promise.all(
     orderedSetHunkIds.map((id, i) =>
       db.showHunk.update({ where: { id }, data: { order: i } })
@@ -256,14 +264,17 @@ export async function reorderSetHunks(setId: string, orderedSetHunkIds: string[]
 }
 
 export async function updateSetHunkRating(showHunkId: string, rating: number | null) {
+  await requireOwner();
   await db.showHunk.update({ where: { id: showHunkId }, data: { rating } });
 }
 
 export async function updateSetBitRating(showBitId: string, rating: number | null) {
+  await requireOwner();
   await db.showBit.update({ where: { id: showBitId }, data: { rating } });
 }
 
 export async function updateSetLineRating(showLineId: string, rating: number | null) {
+  await requireOwner();
   await db.showLine.update({ where: { id: showLineId }, data: { rating } });
 }
 
@@ -271,6 +282,7 @@ export async function updateSetMeta(
   setId: string,
   data: { date: string; venue: string; type: SetType; notes: string }
 ) {
+  await requireOwner();
   await db.show.update({
     where: { id: setId },
     data: {

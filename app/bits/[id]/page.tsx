@@ -7,6 +7,7 @@ import {
   getBitSetHistory,
   getLatestBitVersion,
 } from "@/app/lib/data";
+import { getSession, isOwner } from "@/app/lib/session";
 
 export async function generateMetadata({
   params,
@@ -25,10 +26,11 @@ export default async function BitPage({
 }) {
   const { id } = await params;
 
-  const [latestVersion, allVersions, setHistory] = await Promise.all([
+  const [latestVersion, allVersions, setHistory, session] = await Promise.all([
     getLatestBitVersion(id),
     getAllBitVersions(id),
     getBitSetHistory(id),
+    getSession(),
   ]);
 
   if (!latestVersion) notFound();
@@ -39,6 +41,7 @@ export default async function BitPage({
         bitId={id}
         latestVersion={latestVersion}
         allVersions={allVersions}
+        canEdit={isOwner(session)}
       />
       <BitSetHistory history={setHistory} />
     </>

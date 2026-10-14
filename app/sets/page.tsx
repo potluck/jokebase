@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { getSession, isOwner } from "@/app/lib/session";
 import { getSets } from "@/app/lib/data";
 
 export const metadata: Metadata = { title: "Sets" };
@@ -9,18 +10,20 @@ function setTypeLabel(type: string) {
 }
 
 export default async function SetsPage() {
-  const sets = await getSets();
+  const [sets, session] = await Promise.all([getSets(), getSession()]);
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Sets</h1>
-        <Link
-          href="/sets/new"
-          className="text-sm bg-foreground text-background px-3 py-1.5 rounded hover:opacity-80"
-        >
-          + Log set
-        </Link>
+        {isOwner(session) && (
+          <Link
+            href="/sets/new"
+            className="text-sm bg-foreground text-background px-3 py-1.5 rounded hover:opacity-80"
+          >
+            + Log set
+          </Link>
+        )}
       </div>
 
       {sets.length === 0 ? (

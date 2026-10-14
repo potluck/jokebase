@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { updateHunk } from "@/app/lib/actions";
 import type { getLatestHunkVersion, getAllHunkVersions, getLatestBitVersions } from "@/app/lib/data";
 
@@ -13,6 +14,7 @@ interface Props {
   latestVersion: LatestHunkVersion;
   allVersions: AllVersions;
   allBits: AllBits;
+  canEdit: boolean;
 }
 
 interface BitSlot {
@@ -21,7 +23,7 @@ interface BitSlot {
   title: string;
 }
 
-export default function HunkEditor({ hunkId, latestVersion, allVersions, allBits }: Props) {
+export default function HunkEditor({ hunkId, latestVersion, allVersions, allBits, canEdit }: Props) {
   const [title, setTitle] = useState(latestVersion.title);
   const [bits, setBits] = useState<BitSlot[]>(
     latestVersion.bits.map((hvb) => {
@@ -82,19 +84,25 @@ export default function HunkEditor({ hunkId, latestVersion, allVersions, allBits
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="text-2xl font-bold bg-transparent border-b border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-foreground focus:outline-none w-full mr-4"
-        />
-        <button
-          onClick={handleSave}
-          disabled={pending || !hasChanges || !title.trim()}
-          className="shrink-0 bg-foreground text-background px-4 py-1.5 rounded text-sm font-medium hover:opacity-80 disabled:opacity-40"
-        >
-          {pending ? "Saving…" : "Save new version"}
-        </button>
+        {canEdit ? (
+          <>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="text-2xl font-bold bg-transparent border-b border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-foreground focus:outline-none w-full mr-4"
+            />
+            <button
+              onClick={handleSave}
+              disabled={pending || !hasChanges || !title.trim()}
+              className="shrink-0 bg-foreground text-background px-4 py-1.5 rounded text-sm font-medium hover:opacity-80 disabled:opacity-40"
+            >
+              {pending ? "Saving…" : "Save new version"}
+            </button>
+          </>
+        ) : (
+          <h1 className="text-2xl font-bold">{title}</h1>
+        )}
       </div>
 
       <section className="mb-8">
@@ -110,6 +118,7 @@ export default function HunkEditor({ hunkId, latestVersion, allVersions, allBits
                 key={b.bitId}
                 className="flex items-center gap-2 p-3 rounded-lg border border-neutral-200 dark:border-neutral-800"
               >
+                {canEdit && (
                 <span className="flex flex-col gap-0.5">
                   <button
                     type="button"
@@ -128,20 +137,25 @@ export default function HunkEditor({ hunkId, latestVersion, allVersions, allBits
                     ▼
                   </button>
                 </span>
-                <span className="flex-1 font-medium">{b.title}</span>
-                <button
-                  type="button"
-                  onClick={() => removeBit(b.bitId)}
-                  className="text-neutral-400 hover:text-red-500 text-sm px-1"
-                >
-                  ✕
-                </button>
+                )}
+                <Link href={`/bits/${b.bitId}`} className="flex-1 font-medium hover:underline">
+                  {b.title}
+                </Link>
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={() => removeBit(b.bitId)}
+                    className="text-neutral-400 hover:text-red-500 text-sm px-1"
+                  >
+                    ✕
+                  </button>
+                )}
               </li>
             ))}
           </ul>
         )}
 
-        {availableBits.length > 0 && (
+        {canEdit && availableBits.length > 0 && (
           <div className="mt-3">
             <p className="text-sm text-neutral-500 mb-2">Add a bit:</p>
             <div className="flex flex-wrap gap-2">

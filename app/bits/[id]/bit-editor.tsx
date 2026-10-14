@@ -12,6 +12,7 @@ interface Props {
   bitId: string;
   latestVersion: LatestBitVersion;
   allVersions: AllVersions;
+  canEdit: boolean;
 }
 
 interface LineSlot {
@@ -29,7 +30,7 @@ const LINE_TYPE_LABELS: Record<LineType, string> = {
 
 const LINE_TYPE_OPTIONS: LineType[] = ["SETUP", "PUNCHLINE", "BOTH"];
 
-export default function BitEditor({ bitId, latestVersion, allVersions }: Props) {
+export default function BitEditor({ bitId, latestVersion, allVersions, canEdit }: Props) {
   const [title, setTitle] = useState(latestVersion.title);
   const [lines, setLines] = useState<LineSlot[]>(
     latestVersion.lines.map((bvl) => ({
@@ -94,21 +95,42 @@ export default function BitEditor({ bitId, latestVersion, allVersions }: Props) 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="text-2xl font-bold bg-transparent border-b border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-foreground focus:outline-none w-full mr-4"
-        />
-        <button
-          onClick={handleSave}
-          disabled={pending || !hasChanges || !title.trim()}
-          className="shrink-0 bg-foreground text-background px-4 py-1.5 rounded text-sm font-medium hover:opacity-80 disabled:opacity-40"
-        >
-          {pending ? "Saving…" : "Save new version"}
-        </button>
+        {canEdit ? (
+          <>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="text-2xl font-bold bg-transparent border-b border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-foreground focus:outline-none w-full mr-4"
+            />
+            <button
+              onClick={handleSave}
+              disabled={pending || !hasChanges || !title.trim()}
+              className="shrink-0 bg-foreground text-background px-4 py-1.5 rounded text-sm font-medium hover:opacity-80 disabled:opacity-40"
+            >
+              {pending ? "Saving…" : "Save new version"}
+            </button>
+          </>
+        ) : (
+          <h1 className="text-2xl font-bold">{title}</h1>
+        )}
       </div>
 
+      {!canEdit ? (
+        <section className="mb-8 space-y-2">
+          {lines.map((line, i) => (
+            <div
+              key={i}
+              className="flex gap-3 items-start p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 text-sm"
+            >
+              <span className="text-xs text-neutral-400 pt-0.5 w-16 shrink-0">
+                {LINE_TYPE_LABELS[line.type]}
+              </span>
+              <span className="flex-1 font-mono whitespace-pre-wrap">{line.text}</span>
+            </div>
+          ))}
+        </section>
+      ) : (
       <section className="mb-8 space-y-3">
         {lines.map((line, i) => (
           <div
@@ -177,6 +199,7 @@ export default function BitEditor({ bitId, latestVersion, allVersions }: Props) 
           + Add line
         </button>
       </section>
+      )}
 
       <section>
         <button
